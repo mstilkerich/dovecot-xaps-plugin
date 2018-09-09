@@ -142,7 +142,7 @@ struct xaps_mailbox {
 
 static struct mailbox_transaction_context *xaps_transaction_begin(struct mailbox *box, enum mailbox_transaction_flags flags)
 {
-  i_debug("xaps_transaction_begin");
+  /* i_debug("xaps_transaction_begin"); */
 
   struct xaps_mailbox *xaps_mailbox = XAPS_CONTEXT(box);
   xaps_mailbox->message_count = 0;
@@ -154,7 +154,7 @@ static struct mailbox_transaction_context *xaps_transaction_begin(struct mailbox
 
 static int xaps_save_finish(struct mail_save_context *ctx)
 {
-  i_debug("xaps_save_finish");
+  /* i_debug("xaps_save_finish"); */
 
   struct mailbox_transaction_context *t = ctx->transaction;
   struct xaps_mailbox *xaps_mailbox = XAPS_CONTEXT(t->box);
@@ -170,7 +170,7 @@ static int xaps_save_finish(struct mail_save_context *ctx)
 
 static int xaps_transaction_commit(struct mailbox_transaction_context *t, struct mail_transaction_commit_changes *changes_r)
 {
-  i_debug("xaps_transaction_commit");
+  /* i_debug("xaps_transaction_commit"); */
 
   /*
    * If the message count in this transaction is not zero then we have
@@ -219,12 +219,12 @@ static struct mail_storage_hooks xaps_mail_storage_hooks = {
 
 void xaps_plugin_init(struct module *module)
 {
-  i_debug("xaps_plugin_init");
+  /* i_debug("xaps_plugin_init"); */
   mail_storage_hooks_add(module, &xaps_mail_storage_hooks);
 }
 
 void xaps_plugin_deinit(void)
 {
-  i_debug("xaps_plugin_deinit");
+  /* i_debug("xaps_plugin_deinit"); */
   mail_storage_hooks_remove(&xaps_mail_storage_hooks);
 }
