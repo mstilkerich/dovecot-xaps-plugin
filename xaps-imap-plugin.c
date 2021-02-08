@@ -29,12 +29,13 @@
 #include <imap-common.h>
 
 #include "xaps-imap-plugin.h"
-#include "xaps-daemon.h"
+#include "xaps-utils.h"
 
 const char *xapplepushservice_plugin_version = DOVECOT_ABI_VERSION;
 
 static struct module *xaps_imap_module;
 static imap_client_created_func_t *next_hook_client_created;
+const char *socket_path;
 
 /**
  * Command handler for the XAPPLEPUSHSERVICE command. The command is
@@ -69,7 +70,7 @@ static bool parse_xapplepush(struct client_command_context *cmd, struct xaps_att
     const struct imap_arg *args;
     const char *arg_key, *arg_val;
 
-    xaps_attr->dovecot_username = cmd->client->user->username;
+    xaps_attr->dovecot_username = get_real_mbox_user(cmd->client->user);
 
     if (!client_read_args(cmd, 0, 0, &args)) {
         client_send_command_error(cmd, "Invalid arguments.");
@@ -163,7 +164,7 @@ static bool register_client(struct client_command_context *cmd, struct xaps_attr
     client_send_line(cmd->client,
                      t_strdup_printf("* XAPPLEPUSHSERVICE aps-version \"%s\" aps-topic \"%s\"", xaps_attr->aps_version,
                                      str_c(xaps_attr->aps_topic)));
-    client_send_tagline(cmd, "OK XAPPLEPUSHSERVICE Registration successful.");
+    client_send_tagline(cmd, "OK XAPPLEPUSHSERVICE completed.");
     return TRUE;
 }
 

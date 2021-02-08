@@ -26,7 +26,7 @@
 #include <config.h>
 #include <lib.h>
 #include <net.h>
-#if (DOVECOT_VERSION_MAJOR >= 2u || DOVECOT_VERSION_MINOR >= 3u)
+#if (DOVECOT_VERSION_MAJOR > 2u || (DOVECOT_VERSION_MAJOR == 2u && DOVECOT_VERSION_MINOR >= 3u))
 #include <ostream-unix.h>
 #include <ostream.h>
 #endif
@@ -37,15 +37,38 @@
 #include <mail-storage-private.h>
 #include <push-notification-txn-msg.h>
 
-#include "xaps-daemon.h"
+#include "xaps-utils.h"
 
+// get the real name for users who are actually an alias
+const char *get_real_mbox_user(struct mail_user *muser) {
+    const char *user_lookup = mail_user_plugin_getenv(muser, "xaps_user_lookup");
+    const char *username = muser->username;
+    if (user_lookup != NULL) {
+        const char *userdb_username = mail_user_plugin_getenv(muser, user_lookup);
+        if (userdb_username != NULL) {
+            username = userdb_username;
+        }
+    }
+    return username;
+}
+
+/**
+ * Quote and escape a string. Not sure if this deals correctly with
+ * unicode in mailbox names.
+ */
+
+static void xaps_str_append_quoted(string_t *dest, const char *str) {
+    str_append_c(dest, '"');
+    str_append(dest, str_escape(str));
+    str_append_c(dest, '"');
+}
 
 /*
  * Send the request to our daemon over a unix domain socket. The
  * protocol is very simple line based. We use an alarm to make sure
  * this request does not hang.
  */
-int send_to_deamon(const char *socket_path, const string_t *payload, struct xaps_attr *xaps_attr) {
+int send_to_daemon(const char *socket_path, const string_t *payload, struct xaps_attr *xaps_attr) {
     int ret = -1;
 
     int fd = net_connect_unix(socket_path);
@@ -97,17 +120,6 @@ int send_to_deamon(const char *socket_path, const string_t *payload, struct xaps
 }
 
 /**
- * Quote and escape a string. Not sure if this deals correctly with
- * unicode in mailbox names.
- */
-
-static void xaps_str_append_quoted(string_t *dest, const char *str) {
-    str_append_c(dest, '"');
-    str_append(dest, str_nescape(str, strlen(str)));
-    str_append_c(dest, '"');
-}
-
-/**
  * Notify the backend daemon of an incoming mail. Right now we tell
  * the daemon the username and the mailbox in which a new email was
  * posted. The daemon can then lookup the user and see if any of the
@@ -144,7 +156,7 @@ int xaps_notify(const char *socket_path, const char *username, struct mail_user 
 
 
     push_notification_driver_debug(XAPS_LOG_LABEL, mailuser, "about to send: %p", req);
-    return send_to_deamon(socket_path, req, NULL);
+    return send_to_daemon(socket_path, req, NULL);
 }
 
 /**
@@ -173,9 +185,9 @@ int xaps_register(const char *socket_path, struct xaps_attr *xaps_attr) {
     } else {
         str_append(req, "\tdovecot-mailboxes=(");
         int next = 0;
-        for (; !IMAP_ARG_IS_EOL(xaps_attr->mailboxes); xaps_attr->mailboxes++) {
+        for (int i = 0; !IMAP_ARG_IS_EOL(&xaps_attr->mailboxes[i]); i++) {
             const char *mailbox;
-            if (!imap_arg_get_astring(&(xaps_attr->mailboxes[0]), &mailbox)) {
+            if (!imap_arg_get_astring(&(xaps_attr->mailboxes[i]), &mailbox)) {
                 return -1;
             }
             if (next) {
@@ -188,32 +200,5 @@ int xaps_register(const char *socket_path, struct xaps_attr *xaps_attr) {
     }
     str_append(req, "\r\n");
 
-    return send_to_deamon(socket_path, req, xaps_attr);
-}
-
-// copied from core: src/lib/strescape.c
-// first version with change: 2.3.3
-const char *str_nescape(const void *str, size_t len)
-{
-    const unsigned char *s = str, *p = str;
-    string_t *ret;
-    /* see if we need to quote it */
-    for (p = str; (size_t)(p - s) < len; p++) {
-        if (IS_ESCAPED_CHAR(*p))
-            break;
-    }
-
-    if (p == (s + len))
-        return str;
-
-    /* quote */
-    ret = t_str_new((size_t)(p - s) + 128);
-    str_append_max(ret, s, (size_t)(p - s));
-
-    for (; (size_t)(p - s) < len; p++) {
-        if (IS_ESCAPED_CHAR(*p))
-            str_append_c(ret, '\\');
-        str_append_data(ret, p, 1);
-    }
-    return str_c(ret);
+    return send_to_daemon(socket_path, req, xaps_attr);
 }

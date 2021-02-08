@@ -36,9 +36,11 @@
 #include <push-notification-txn-mbox.h>
 
 #include "xaps-push-notification-plugin.h"
-#include "xaps-daemon.h"
+#include "xaps-utils.h"
 
 const char *xaps_plugin_version = DOVECOT_ABI_VERSION;
+
+const char *socket_path;
 
 /*
  * Prepare message handling.
@@ -93,10 +95,7 @@ static void xaps_plugin_process_msg(struct push_notification_driver_txn *dtxn, s
                                            "Handling event: %s", (*event)->event->event->name);
         }
     }
-    const char *username = dtxn->ptxn->muser->username;
-    if (user_lookup != NULL) {
-        username = mail_user_plugin_getenv(dtxn->ptxn->muser, user_lookup);
-    }
+    const char *username = get_real_mbox_user(dtxn->ptxn->muser);
     if (xaps_notify(socket_path, username, dtxn->ptxn->muser, dtxn->ptxn->mbox, msg) != 0) {
         i_error("cannot notify");
     }
@@ -117,7 +116,6 @@ int xaps_plugin_init(struct push_notification_driver_config *dconfig ATTR_UNUSED
     if (socket_path == NULL) {
         socket_path = DEFAULT_SOCKPATH;
     }
-    user_lookup = mail_user_plugin_getenv(muser, "xaps_user_lookup");
     return 0;
 }
 
