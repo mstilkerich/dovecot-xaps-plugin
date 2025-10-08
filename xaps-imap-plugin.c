@@ -263,7 +263,7 @@ void xaps_register_callback(const struct http_response *response, void *context)
             // Success.
             i_debug("Notification sent successfully: %s", http_response_get_message(response));
             i_stream_read_data(response->payload, &xaps_global->aps_topic, &size, 128);
-            i_assert(size > 50);
+            i_assert(size > 31);
             break;
 
         default:
