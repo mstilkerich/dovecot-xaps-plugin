@@ -228,7 +228,7 @@ static bool register_client(struct client_command_context *cmd, struct xaps_attr
      * contain anything that needs to be escaped.
      */
     client_send_line(cmd->client,
-                     t_strdup_printf("* XAPPLEPUSHSERVICE aps-version \"%s\" aps-topic \"%s\"", xaps_attr->aps_version,
+                     t_strdup_printf("* XAPPLEPUSHSERVICE aps-version %s aps-topic %s", xaps_attr->aps_version,
                                      xaps_global->aps_topic));
     client_send_tagline(cmd, "OK XAPPLEPUSHSERVICE completed.");
     return TRUE;
