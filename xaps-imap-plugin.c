@@ -228,7 +228,7 @@ static bool register_client(struct client_command_context *cmd, struct xaps_attr
      * contain anything that needs to be escaped.
      */
     client_send_line(cmd->client,
-                     t_strdup_printf("* XAPPLEPUSHSERVICE aps-version \"%s\" aps-topic \"%s\"", xaps_attr->aps_version,
+                     t_strdup_printf("* XAPPLEPUSHSERVICE aps-version %s aps-topic %s", xaps_attr->aps_version,
                                      xaps_global->aps_topic));
     client_send_tagline(cmd, "OK XAPPLEPUSHSERVICE completed.");
     return TRUE;
@@ -263,7 +263,7 @@ void xaps_register_callback(const struct http_response *response, void *context)
             // Success.
             i_debug("Notification sent successfully: %s", http_response_get_message(response));
             i_stream_read_data(response->payload, &xaps_global->aps_topic, &size, 128);
-            i_assert(size > 50);
+            i_assert(size > 31);
             break;
 
         default:
