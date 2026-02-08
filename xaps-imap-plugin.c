@@ -192,7 +192,7 @@ int xaps_register(struct client_command_context *cmd, struct xaps_attr *xaps_att
     }
     str_append(str, "}");
 
-    i_debug("Sending registration: %s", str_c(str));
+    //i_debug("Sending registration: %s", str_c(str));
 
     payload = i_stream_create_from_data(str_data(str), str_len(str));
     i_stream_add_destroy_callback(payload, str_free_i, str);
@@ -261,7 +261,7 @@ void xaps_register_callback(const struct http_response *response, void *context)
     switch (response->status / 100) {
         case 2:
             // Success.
-            i_debug("Notification sent successfully: %s", http_response_get_message(response));
+            //i_debug("Notification sent successfully: %s", http_response_get_message(response));
             i_stream_read_data(response->payload, &xaps_global->aps_topic, &size, 128);
             i_assert(size > 31);
             break;

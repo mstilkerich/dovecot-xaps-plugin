@@ -127,7 +127,7 @@ static void xaps_notify(struct push_notification_driver_txn *dtxn, struct push_n
     }
     str_append(str, "}");
 
-    i_debug("Sending notification: %s", str_c(str));
+    //i_debug("Sending notification: %s", str_c(str));
 
     payload = i_stream_create_from_data(str_data(str), str_len(str));
     i_stream_add_destroy_callback(payload, str_free_i, str);
@@ -141,12 +141,12 @@ void push_notification_driver_xaps_http_callback(const struct http_response *res
     switch (response->status / 100) {
         case 2:
             // Success.
-            i_debug("Notification sent successfully: %s", http_response_get_message(response));
+            //i_debug("Notification sent successfully: %s", http_response_get_message(response));
             break;
 
         default:
             if (response->status == 404) {
-                i_debug("Notification sent successfully, but no registered device found: %s", http_response_get_message(response));
+                //i_debug("Notification sent successfully, but no registered device found: %s", http_response_get_message(response));
             } else {
                 // Error.
                 i_error("Error when sending notification: %s", http_response_get_message(response));
